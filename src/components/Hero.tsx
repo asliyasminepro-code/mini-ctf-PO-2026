@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import TerminalText from "./TerminalText";
 import { cyberAudio } from "@/lib/sound";
+import { TOTAL_CHALLENGES, MAX_POINTS } from "@/data/challenges";
 
 export default function Hero() {
   return (
@@ -71,7 +72,7 @@ export default function Hero() {
           <Link
             href="/challenges"
             onClick={() => cyberAudio?.playClick()}
-            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl font-mono text-sm sm:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 bg-gradient-to-r from-[#E91E63] via-[#FF2A7A] to-[#7C3AED] hover:shadow-[0_0_35px_rgba(233,30,99,0.7)] hover:scale-[1.03] active:scale-[0.98] border border-[#FF6F9C]/50"
+            className="group relative inline-flex items-center gap-3 px-8 py-4 rounded-xl font-mono text-sm sm:text-base font-bold uppercase tracking-wider text-white transition-all duration-300 bg-gradient-to-r from-cyan-500 via-blue-600 to-orange-500 hover:shadow-[0_0_35px_rgba(0,240,255,0.6)] hover:scale-[1.03] active:scale-[0.98] border border-cyan-400/40"
           >
             <Sparkles className="w-5 h-5 text-white/90 animate-spin" style={{ animationDuration: "6s" }} />
             <span>COMMENCER LA MISSION</span>
@@ -80,14 +81,14 @@ export default function Hero() {
 
           <p className="text-xs font-mono text-zinc-400 flex items-center gap-2">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            2 challenges disponibles • Niveau débutant • 200 PTS max
+            {TOTAL_CHALLENGES} challenges disponibles • 3 niveaux progressifs • {MAX_POINTS} PTS max
           </p>
         </div>
 
-        {/* October Rose Cyber Abstract Graphic & 3-Step Mission Breakdown */}
+        {/* 3-Step Mission Breakdown */}
         <div className="mt-20 pt-12 border-t border-zinc-800/80">
           <div className="text-center mb-8">
-            <h2 className="text-xs font-mono uppercase tracking-widest text-[#FF6F9C] font-semibold mb-1">
+            <h2 className="text-xs font-mono uppercase tracking-widest text-cyan-400 font-semibold mb-1">
               COMMENT ÇA FONCTIONNE ?
             </h2>
             <p className="text-sm text-zinc-400">
@@ -97,38 +98,38 @@ export default function Hero() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Step 1 */}
-            <div className="relative p-6 rounded-2xl bg-[#101118]/80 border border-zinc-800 hover:border-[#E91E63]/40 transition-all group backdrop-blur-sm">
-              <div className="w-12 h-12 rounded-xl bg-[#E91E63]/10 border border-[#E91E63]/30 flex items-center justify-center text-[#FF6F9C] mb-4 group-hover:scale-110 transition-transform">
+            <div className="relative p-6 rounded-2xl bg-[#0e1222]/80 border border-zinc-800 hover:border-cyan-500/40 transition-all group backdrop-blur-sm">
+              <div className="w-12 h-12 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 mb-4 group-hover:scale-110 transition-transform">
                 <Search className="w-6 h-6" />
               </div>
-              <div className="text-xs font-mono text-[#FF6F9C] font-semibold mb-1">ÉTAPE 01</div>
+              <div className="text-xs font-mono text-cyan-400 font-semibold mb-1">ÉTAPE 01</div>
               <h3 className="text-base font-bold text-white mb-2">Inspecter & Chercher</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Explore le code source de la page web ou analyse un message encodé pour débusquer l&apos;indice caché.
+                Explore le code source HTML, les en-têtes HTTP, les scripts Python ou les messages chiffrés pour débusquer l&apos;indice caché.
               </p>
             </div>
 
             {/* Step 2 */}
-            <div className="relative p-6 rounded-2xl bg-[#101118]/80 border border-zinc-800 hover:border-[#7C3AED]/40 transition-all group backdrop-blur-sm">
-              <div className="w-12 h-12 rounded-xl bg-[#7C3AED]/10 border border-[#7C3AED]/30 flex items-center justify-center text-[#A78BFA] mb-4 group-hover:scale-110 transition-transform">
+            <div className="relative p-6 rounded-2xl bg-[#0e1222]/80 border border-zinc-800 hover:border-orange-500/40 transition-all group backdrop-blur-sm">
+              <div className="w-12 h-12 rounded-xl bg-orange-500/10 border border-orange-500/30 flex items-center justify-center text-orange-400 mb-4 group-hover:scale-110 transition-transform">
                 <KeyRound className="w-6 h-6" />
               </div>
-              <div className="text-xs font-mono text-[#A78BFA] font-semibold mb-1">ÉTAPE 02</div>
+              <div className="text-xs font-mono text-orange-400 font-semibold mb-1">ÉTAPE 02</div>
               <h3 className="text-base font-bold text-white mb-2">Trouver le Flag</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Le secret prend toujours la forme <code className="text-[#FF6F9C] font-mono font-semibold">FLAG&#123;...&#125;</code>. C&apos;est votre trophée numérique.
+                Le secret prend toujours la forme <code className="text-orange-400 font-mono font-semibold">CTF&#123;...&#125;</code>. C&apos;est votre trophée numérique.
               </p>
             </div>
 
             {/* Step 3 */}
-            <div className="relative p-6 rounded-2xl bg-[#101118]/80 border border-zinc-800 hover:border-emerald-500/40 transition-all group backdrop-blur-sm">
+            <div className="relative p-6 rounded-2xl bg-[#0e1222]/80 border border-zinc-800 hover:border-emerald-500/40 transition-all group backdrop-blur-sm">
               <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
                 <Trophy className="w-6 h-6" />
               </div>
               <div className="text-xs font-mono text-emerald-400 font-semibold mb-1">ÉTAPE 03</div>
               <h3 className="text-base font-bold text-white mb-2">Valider & Marquer</h3>
               <p className="text-xs text-zinc-400 leading-relaxed">
-                Soumets le flag sur la plateforme pour débloquer +100 points et valider votre première victoire cyber !
+                Soumets le flag sur la plateforme pour enregistrer vos points et progresser à travers les 3 niveaux de difficulté !
               </p>
             </div>
           </div>

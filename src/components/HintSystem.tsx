@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lightbulb, ChevronDown, ChevronUp, Lock, Unlock, HelpCircle } from "lucide-react";
+import { Lightbulb, ChevronDown, ChevronUp, Lock, Unlock, HelpCircle, Sparkles } from "lucide-react";
 import { cyberAudio } from "@/lib/sound";
 
 interface HintSystemProps {
@@ -9,92 +9,123 @@ interface HintSystemProps {
 }
 
 export default function HintSystem({ hints }: HintSystemProps) {
-  const [unlockedIndices, setUnlockedIndices] = useState<number[]>([]);
+  const [unlockedCount, setUnlockedCount] = useState<number>(0);
   const [isExpanded, setIsExpanded] = useState(false);
 
-  const toggleUnlock = (index: number) => {
-    if (unlockedIndices.includes(index)) return;
+  const unlockNextHint = () => {
+    if (unlockedCount >= hints.length) return;
     cyberAudio?.playHintUnlock();
-    setUnlockedIndices((prev) => [...prev, index]);
+    setUnlockedCount((prev) => prev + 1);
+    if (!isExpanded) setIsExpanded(true);
   };
 
   return (
-    <div className="rounded-2xl bg-[#101118] border border-zinc-800 overflow-hidden shadow-lg">
+    <div className="rounded-2xl bg-[#0e1222]/90 border border-[#1f2744] hover:border-amber-500/30 overflow-hidden shadow-lg transition-all">
       {/* Header Bar */}
-      <button
-        type="button"
-        onClick={() => {
-          cyberAudio?.playClick();
-          setIsExpanded(!isExpanded);
-        }}
-        className="w-full p-4 sm:p-5 flex items-center justify-between text-left hover:bg-[#161826] transition-colors"
-      >
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+      <div className="p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3 text-left">
+        <button
+          type="button"
+          onClick={() => {
+            cyberAudio?.playClick();
+            setIsExpanded(!isExpanded);
+          }}
+          className="flex items-center gap-3 hover:opacity-80 transition-opacity"
+        >
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
             <Lightbulb className="w-4 h-4" />
           </div>
-          <div>
+          <div className="text-left">
             <div className="text-sm font-bold text-white flex items-center gap-2 font-mono">
               <span>INDICES DE MISSION</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                {unlockedIndices.length} / {hints.length} Débloqué(s)
+                {unlockedCount} / {hints.length} Révélé(s)
               </span>
             </div>
             <p className="text-xs text-zinc-400">
-              Bloqué sur cette épreuve ? Débloque des indices progressifs.
+              Un doute ou une difficulté ? Révèle les indices de manière progressive.
             </p>
           </div>
-        </div>
+        </button>
 
-        <div className="text-zinc-400 p-1 rounded-md hover:bg-zinc-800">
-          {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+        <div className="flex items-center gap-2 ml-auto">
+          {unlockedCount < hints.length && (
+            <button
+              type="button"
+              onClick={unlockNextHint}
+              className="px-3 py-1.5 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/40 text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Afficher un indice ({unlockedCount + 1}/{hints.length})</span>
+            </button>
+          )}
+
+          <button
+            type="button"
+            onClick={() => {
+              cyberAudio?.playClick();
+              setIsExpanded(!isExpanded);
+            }}
+            className="text-zinc-400 p-1.5 rounded-lg hover:bg-zinc-800 transition-colors"
+            aria-label="Afficher ou masquer les indices"
+          >
+            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          </button>
         </div>
-      </button>
+      </div>
 
       {/* Expandable Hints Container */}
       {isExpanded && (
         <div className="p-4 sm:p-5 pt-0 space-y-3 border-t border-zinc-800/80 mt-1 font-mono text-xs animate-fadeIn">
           {hints.map((hint, idx) => {
-            const isUnlocked = unlockedIndices.includes(idx);
+            const isUnlocked = idx < unlockedCount;
+            const isNextToUnlock = idx === unlockedCount;
+
             return (
               <div
                 key={idx}
                 className={`p-3.5 sm:p-4 rounded-xl border transition-all ${
                   isUnlocked
-                    ? "bg-[#161826] border-amber-500/40 text-zinc-200"
-                    : "bg-[#0c0d14] border-zinc-800/80 text-zinc-400"
+                    ? "bg-[#13182c] border-amber-500/40 text-zinc-200"
+                    : "bg-[#070913] border-zinc-800/80 text-zinc-400"
                 }`}
               >
                 <div className="flex items-center justify-between gap-2 mb-1.5">
-                  <span className="font-bold text-[#FF6F9C] flex items-center gap-1.5">
+                  <span className="font-bold text-amber-400 flex items-center gap-1.5">
                     <HelpCircle className="w-3.5 h-3.5" />
                     INDICE #{idx + 1}
                   </span>
 
-                  {!isUnlocked ? (
-                    <button
-                      type="button"
-                      onClick={() => toggleUnlock(idx)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/15 text-amber-400 hover:bg-amber-500/25 border border-amber-500/30 text-[11px] font-bold transition-all"
-                    >
-                      <Lock className="w-3 h-3" />
-                      <span>RÉVÉLER L&apos;INDICE</span>
-                    </button>
-                  ) : (
+                  {isUnlocked ? (
                     <span className="inline-flex items-center gap-1 text-emerald-400 text-[11px]">
                       <Unlock className="w-3 h-3" />
                       <span>DÉVERROUILLÉ</span>
+                    </span>
+                  ) : isNextToUnlock ? (
+                    <button
+                      type="button"
+                      onClick={unlockNextHint}
+                      className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-amber-500/15 text-amber-300 hover:bg-amber-500/30 border border-amber-500/40 text-[11px] font-bold transition-all"
+                    >
+                      <Lock className="w-3 h-3" />
+                      <span>RÉVÉLER CET INDICE</span>
+                    </button>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-zinc-500 text-[11px]">
+                      <Lock className="w-3 h-3" />
+                      <span>VERROUILLÉ (Indice précédent requis)</span>
                     </span>
                   )}
                 </div>
 
                 {isUnlocked ? (
-                  <p className="text-zinc-200 text-xs sm:text-sm font-sans mt-2 leading-relaxed bg-[#0c0d14]/80 p-3 rounded-lg border border-zinc-800">
+                  <p className="text-zinc-200 text-xs sm:text-sm font-sans mt-2 leading-relaxed bg-[#070913]/90 p-3 rounded-lg border border-zinc-800">
                     {hint}
                   </p>
                 ) : (
                   <p className="text-[11px] text-zinc-500 italic mt-1 font-sans">
-                    Clique sur « Révéler l&apos;indice » pour afficher l&apos;aide.
+                    {isNextToUnlock
+                      ? "Clique sur « Révéler cet indice » pour débloquer l'aide."
+                      : `Débloque d'abord l'indice #${idx} pour accéder à cet indice.`}
                   </p>
                 )}
               </div>

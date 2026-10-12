@@ -3,6 +3,10 @@
 @layer base {
   :root {
     --bg-cyber: #08090d;
+    --navy-dark: #070913;
+    --navy-surface: #0e1222;
+    --navy-card: #12162a;
+    --navy-border: #1f2744;
     --surface-cyber: #101118;
     --surface-elevated: #161826;
     --pink-primary: #e91e63;
@@ -10,23 +14,26 @@
     --pink-neon: #ff2a7a;
     --purple-accent: #7c3aed;
     --cyan-accent: #00f0ff;
+    --orange-csi: #ff6600;
+    --orange-csi-light: #ff8533;
+    --orange-csi-glow: rgba(255, 102, 0, 0.4);
     --text-primary: #f8f8fa;
     --text-muted: #9ca3af;
-    --border-cyber: rgba(233, 30, 99, 0.25);
+    --border-cyber: rgba(0, 240, 255, 0.2);
   }
 
   body {
-    background-color: var(--bg-cyber);
+    background-color: #08090d !important;
     color: var(--text-primary);
     font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     overflow-x: hidden;
     min-height: 100vh;
-    selection-background-color: #e91e63;
-    selection-color: #ffffff;
+    selection-background-color: #00f0ff;
+    selection-color: #08090d;
   }
 
   ::selection {
-    background: #e91e63;
+    background: #ff6600;
     color: #ffffff;
   }
 }
@@ -53,6 +60,14 @@
   box-shadow: 0 0 25px rgba(233, 30, 99, 0.35), 0 0 50px rgba(233, 30, 99, 0.15);
 }
 
+.cyber-glow-orange {
+  box-shadow: 0 0 25px rgba(255, 102, 0, 0.35), 0 0 50px rgba(255, 102, 0, 0.15);
+}
+
+.cyber-glow-cyan {
+  box-shadow: 0 0 25px rgba(0, 240, 255, 0.35), 0 0 50px rgba(0, 240, 255, 0.15);
+}
+
 .cyber-glow-pink-sm {
   box-shadow: 0 0 15px rgba(233, 30, 99, 0.3);
 }
@@ -63,6 +78,10 @@
 
 .cyber-text-glow {
   text-shadow: 0 0 10px rgba(233, 30, 99, 0.6), 0 0 20px rgba(255, 111, 156, 0.4);
+}
+
+.cyber-text-glow-orange {
+  text-shadow: 0 0 10px rgba(255, 102, 0, 0.6), 0 0 20px rgba(255, 133, 51, 0.4);
 }
 
 .cyber-text-glow-cyan {

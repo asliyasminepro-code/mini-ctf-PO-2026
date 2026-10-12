@@ -13,6 +13,7 @@ import {
   Send,
   Copy,
   Check,
+  Loader2,
 } from "lucide-react";
 import { Challenge } from "@/data/challenges";
 import { solveChallenge, useCTFProgress } from "@/lib/progress";
@@ -24,10 +25,12 @@ interface FlagInputProps {
 
 export default function FlagInput({ challenge }: FlagInputProps) {
   const { solved, isLoaded } = useCTFProgress();
-  const isAlreadySolved = isLoaded && solved.includes(challenge.id);
+  const isAlreadySolved =
+    isLoaded && (solved.includes(challenge.id) || solved.includes(challenge.slug));
 
   const [flagValue, setFlagValue] = useState("");
   const [justSolved, setJustSolved] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [status, setStatus] = useState<"idle" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [copiedSuccess, setCopiedSuccess] = useState(false);
@@ -37,17 +40,17 @@ export default function FlagInput({ challenge }: FlagInputProps) {
   const triggerConfetti = () => {
     try {
       confetti({
-        particleCount: 80,
-        spread: 70,
+        particleCount: 90,
+        spread: 80,
         origin: { y: 0.6 },
-        colors: ["#E91E63", "#FF6F9C", "#7C3AED", "#00F0FF", "#10B981"],
+        colors: ["#00F0FF", "#FF6600", "#FF2A7A", "#7C3AED", "#10B981"],
       });
     } catch {
       // Ignored
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const cleanInput = flagValue.trim();
 
@@ -58,30 +61,55 @@ export default function FlagInput({ challenge }: FlagInputProps) {
       return;
     }
 
-    if (cleanInput === challenge.flag) {
-      setStatus("idle");
-      setJustSolved(true);
-      solveChallenge(challenge.id);
-      cyberAudio?.playAccessGranted();
-      triggerConfetti();
-    } else {
+    if (isSuccess) {
+      return; // Already solved
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const res = await fetch("/api/validate-flag", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          challengeId: challenge.slug,
+          flag: cleanInput,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.valid) {
+        setStatus("idle");
+        setJustSolved(true);
+        solveChallenge(challenge.id);
+        cyberAudio?.playAccessGranted();
+        triggerConfetti();
+      } else {
+        setStatus("error");
+        setErrorMessage(data.message || "Ce n'est pas le bon flag. Continue à chercher.");
+        cyberAudio?.playAccessDenied();
+      }
+    } catch {
       setStatus("error");
-      setErrorMessage("Ce n'est pas le bon flag. Continue à chercher.");
+      setErrorMessage("Impossible de joindre le serveur de validation.");
       cyberAudio?.playAccessDenied();
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="rounded-2xl bg-[#101118] border border-[#23273A] p-6 sm:p-8 shadow-xl relative overflow-hidden">
+    <div className="rounded-2xl bg-[#0e1222]/90 border border-[#1f2744] hover:border-cyan-500/30 transition-all p-6 sm:p-8 shadow-xl relative overflow-hidden">
       {/* Glow Effect if Correct */}
       {isSuccess && (
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-[#E91E63]/10 pointer-events-none" />
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 via-transparent to-cyan-500/10 pointer-events-none" />
       )}
 
       {/* Header */}
       <div className="flex items-center justify-between gap-4 mb-5 border-b border-zinc-800/80 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-[#E91E63]/15 border border-[#E91E63]/30 flex items-center justify-center text-[#FF6F9C]">
+          <div className="w-8 h-8 rounded-lg bg-cyan-500/15 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
             <ShieldCheck className="w-4 h-4" />
           </div>
           <div>
@@ -89,13 +117,13 @@ export default function FlagInput({ challenge }: FlagInputProps) {
               VALIDATION DU FLAG
             </h3>
             <p className="text-xs text-zinc-400">
-              Format officiel : <code className="text-[#FF6F9C] font-mono">FLAG&#123;...&#125;</code>
+              Format officiel : <code className="text-cyan-400 font-mono font-semibold">CTF&#123;...&#125;</code>
             </p>
           </div>
         </div>
 
-        <div className="text-xs font-mono px-2.5 py-1 rounded-md bg-[#E91E63]/15 text-[#FF6F9C] border border-[#E91E63]/30 font-bold flex items-center gap-1">
-          <Zap className="w-3.5 h-3.5" />
+        <div className="text-xs font-mono px-2.5 py-1 rounded-md bg-orange-500/15 text-orange-400 border border-orange-500/30 font-bold flex items-center gap-1">
+          <Zap className="w-3.5 h-3.5 text-orange-400" />
           +{challenge.points} PTS
         </div>
       </div>
@@ -105,18 +133,19 @@ export default function FlagInput({ challenge }: FlagInputProps) {
         <div className="relative">
           <input
             type="text"
-            value={isSuccess && !flagValue ? challenge.flag : flagValue}
+            disabled={isSuccess || isSubmitting}
+            value={isSuccess && !flagValue ? "Mission validée avec succès !" : flagValue}
             onChange={(e) => {
               setFlagValue(e.target.value);
               if (status === "error") setStatus("idle");
             }}
-            placeholder="FLAG{...}"
-            className={`w-full px-4 py-3.5 rounded-xl bg-[#0c0d14] text-white font-mono text-sm sm:text-base tracking-wide border transition-all focus:outline-none ${
+            placeholder="CTF{...}"
+            className={`w-full px-4 py-3.5 rounded-xl bg-[#070913] text-white font-mono text-sm sm:text-base tracking-wide border transition-all focus:outline-none ${
               isSuccess
-                ? "border-emerald-500 ring-2 ring-emerald-500/30 text-emerald-400"
+                ? "border-emerald-500 ring-2 ring-emerald-500/30 text-emerald-400 cursor-not-allowed bg-emerald-950/20"
                 : status === "error"
                 ? "border-rose-500 ring-2 ring-rose-500/30 animate-glitch"
-                : "border-zinc-800 hover:border-zinc-700 focus:border-[#E91E63] focus:ring-2 focus:ring-[#E91E63]/30"
+                : "border-zinc-800 hover:border-zinc-700 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/30"
             }`}
           />
         </div>
@@ -125,16 +154,24 @@ export default function FlagInput({ challenge }: FlagInputProps) {
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <button
             type="submit"
+            disabled={isSuccess || isSubmitting}
             onClick={() => {
-              if (!isSuccess) cyberAudio?.playClick();
+              if (!isSuccess && !isSubmitting) cyberAudio?.playClick();
             }}
             className={`w-full sm:w-auto flex-1 flex items-center justify-center gap-2 py-3.5 px-6 rounded-xl font-mono text-xs sm:text-sm font-bold uppercase tracking-wider transition-all duration-300 ${
               isSuccess
-                ? "bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-600/30"
-                : "bg-gradient-to-r from-[#E91E63] to-[#7C3AED] hover:from-[#FF2A7A] hover:to-[#8B5CF6] text-white shadow-lg shadow-[#E91E63]/25 hover:shadow-[0_0_25px_rgba(233,30,99,0.5)]"
+                ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 cursor-default"
+                : isSubmitting
+                ? "bg-cyan-700 text-white cursor-wait opacity-80"
+                : "bg-gradient-to-r from-cyan-500 via-blue-600 to-orange-500 hover:from-cyan-400 hover:via-blue-500 hover:to-orange-400 text-white shadow-lg shadow-cyan-500/25 hover:shadow-[0_0_25px_rgba(0,240,255,0.4)]"
             }`}
           >
-            {isSuccess ? (
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                <span>VÉRIFICATION EN COURS...</span>
+              </>
+            ) : isSuccess ? (
               <>
                 <CheckCircle2 className="w-4 h-4" />
                 <span>MISSION VALIDÉE</span>
@@ -142,74 +179,64 @@ export default function FlagInput({ challenge }: FlagInputProps) {
             ) : (
               <>
                 <Send className="w-4 h-4" />
-                <span>SUBMIT FLAG</span>
+                <span>VALIDER LE FLAG</span>
               </>
             )}
           </button>
 
           {/* Quick paste helper */}
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                const text = await navigator.clipboard.readText();
-                if (text) {
-                  setFlagValue(text);
-                  cyberAudio?.playClick();
-                  setCopiedSuccess(true);
-                  setTimeout(() => setCopiedSuccess(false), 1500);
+          {!isSuccess && (
+            <button
+              type="button"
+              onClick={async () => {
+                try {
+                  const text = await navigator.clipboard.readText();
+                  if (text) {
+                    setFlagValue(text);
+                    cyberAudio?.playClick();
+                    setCopiedSuccess(true);
+                    setTimeout(() => setCopiedSuccess(false), 1500);
+                  }
+                } catch {
+                  // Clipboard permissions denied
                 }
-              } catch {
-                // Clipboard permissions denied
-              }
-            }}
-            className="w-full sm:w-auto px-4 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-mono text-xs flex items-center justify-center gap-1.5 transition-colors"
-            title="Coller depuis le presse-papier"
-          >
-            {copiedSuccess ? (
-              <>
-                <Check className="w-3.5 h-3.5 text-emerald-400" />
-                <span>COLLÉ !</span>
-              </>
-            ) : (
-              <>
-                <Copy className="w-3.5 h-3.5 text-[#FF6F9C]" />
-                <span>COLLER</span>
-              </>
-            )}
-          </button>
+              }}
+              className="w-full sm:w-auto px-4 py-3.5 rounded-xl bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white font-mono text-xs flex items-center justify-center gap-1.5 transition-colors"
+              title="Coller depuis le presse-papier"
+            >
+              {copiedSuccess ? (
+                <>
+                  <Check className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>COLLÉ !</span>
+                </>
+              ) : (
+                <>
+                  <Copy className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>COLLER</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </form>
 
       {/* Success Notification Panel */}
       {isSuccess && (
-        <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-emerald-950/60 to-[#10131f] border border-emerald-500/50 shadow-lg animate-fadeIn font-mono">
+        <div className="mt-6 p-5 rounded-xl bg-gradient-to-br from-emerald-950/60 to-[#0e1222] border border-emerald-500/50 shadow-lg animate-fadeIn font-mono">
           <div className="flex items-center gap-3 mb-3">
             <div className="p-2 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">
               <CheckCircle2 className="w-6 h-6" />
             </div>
             <div>
               <div className="text-base sm:text-lg font-black text-emerald-400 tracking-wider">
-                ACCESS GRANTED • FLAG ACCEPTED
+                ACCESS GRANTED • FLAG ACCEPTÉ
               </div>
               <div className="text-xs text-zinc-300 flex items-center gap-1.5 mt-0.5">
-                <span className="text-[#FF6F9C] font-bold">+{challenge.points} POINTS</span>
+                <span className="text-orange-400 font-bold">+{challenge.points} POINTS</span>
                 <span>enregistrés dans votre profil de session !</span>
               </div>
             </div>
           </div>
-
-          {/* Post-success explanation if present */}
-          {challenge.explanationAfterSuccess && (
-            <div className="mt-4 p-4 rounded-lg bg-[#0c0d14]/90 border border-emerald-500/30 text-xs sm:text-sm font-sans text-zinc-200 leading-relaxed">
-              <p className="font-mono text-emerald-400 font-bold mb-1 flex items-center gap-1.5">
-                <Sparkles className="w-4 h-4" /> EXPLICATION PÉDAGOGIQUE :
-              </p>
-              <div className="whitespace-pre-line text-zinc-300 font-sans">
-                {challenge.explanationAfterSuccess}
-              </div>
-            </div>
-          )}
 
           {/* Next challenge button or back to missions */}
           <div className="mt-5 pt-4 border-t border-emerald-500/20 flex flex-wrap items-center justify-between gap-3">
@@ -218,14 +245,14 @@ export default function FlagInput({ challenge }: FlagInputProps) {
               onClick={() => cyberAudio?.playClick()}
               className="text-xs font-mono text-zinc-400 hover:text-white flex items-center gap-1"
             >
-              ← Retour aux missions
+              ← Revoir toutes les missions
             </Link>
 
             {challenge.nextChallengeSlug ? (
               <Link
                 href={`/challenges/${challenge.nextChallengeSlug}`}
                 onClick={() => cyberAudio?.playClick()}
-                className="px-4 py-2 rounded-lg bg-gradient-to-r from-[#E91E63] to-[#7C3AED] hover:from-[#FF2A7A] hover:to-[#8B5CF6] text-white text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 shadow-md shadow-[#E91E63]/30"
+                className="px-4 py-2.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 shadow-md shadow-cyan-500/30"
               >
                 <span>MISSION SUIVANTE</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -234,9 +261,9 @@ export default function FlagInput({ challenge }: FlagInputProps) {
               <Link
                 href="/challenges"
                 onClick={() => cyberAudio?.playClick()}
-                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
+                className="px-4 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold font-mono tracking-wider flex items-center gap-1.5 shadow-md shadow-emerald-600/30"
               >
-                <span>VOIR LE TABLEAU DES SCORES</span>
+                <span>VOIR LE TABLEAU FINAL</span>
                 <Sparkles className="w-3.5 h-3.5" />
               </Link>
             )}

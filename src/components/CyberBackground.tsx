@@ -41,10 +41,11 @@ export default function CyberBackground() {
     }> = [];
 
     const colors = [
-      "#E91E63", // Pink
-      "#FF6F9C", // Light Pink
-      "#7C3AED", // Purple
       "#00F0FF", // Cyan accent
+      "#2563EB", // Blue
+      "#FF6600", // CSI Orange
+      "#7C3AED", // Purple
+      "#FF2A7A", // Rose accent
     ];
 
     for (let i = 0; i < particleCount; i++) {
